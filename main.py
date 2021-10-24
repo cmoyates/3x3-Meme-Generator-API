@@ -96,5 +96,14 @@ def return_image(
     )
 
 
+@app.get("/test")
+def test_image(image_url: str):
+    try:
+        ImportImage(image_url)
+        return responses.Response(content="Valid")
+    except:
+        return responses.Response(content="Not Valid")
+
+
 if __name__ == "__main__":
     app.run()
