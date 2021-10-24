@@ -17,32 +17,32 @@ ALIGNMENTS = [
     ["Lawful Evil", "Neutral Evil", "Chaotic Evil"],
 ]
 
+
 def ImportImage(img_string: str):
     r = requests.get(img_string)
     img = Image.open(BytesIO(r.content))
     img = img.resize((THIRD, THIRD))
     return img
 
+
 font = ImageFont.truetype("arial.ttf", 20)
+
 
 def generate(input_array):
     image = Image.new("RGB", (SIDE_LENGTH, SIDE_LENGTH), color=WHITE)
     image_draw = ImageDraw.Draw(image)
 
-
-    
-
     for i in range(3):
         for j in range(3):
-            user_image = ImportImage(input_array[i][j])
-            image.paste(user_image, (THIRD*i, THIRD*j))
-
+            try:
+                user_image = ImportImage(input_array[i][j])
+                image.paste(user_image, (THIRD * i, THIRD * j))
+            except:
+                return f"Malformed input: Failed on image index {(i) * 3 + j}"
 
     for i in range(THIRD, SIDE_LENGTH, THIRD):
         image_draw.line([(0, i), (SIDE_LENGTH, i)], fill=BLACK, width=5)
         image_draw.line([(i, 0), (i, SIDE_LENGTH)], fill=BLACK, width=5)
-
-
 
     for i in range(3):
         for j in range(3):
@@ -60,9 +60,10 @@ def generate(input_array):
     return image
 
 
-#test_user_image = ImportImage("https://i.imgur.com/V73crmb.jpg")
+# test_user_image = ImportImage("https://i.imgur.com/V73crmb.jpg")
 
 app = FastAPI()
+
 
 @app.get("/")
 def return_root():
@@ -70,17 +71,17 @@ def return_root():
 
 
 @app.get("/api")
-def return_image(lg: str, ng: str, cg: str, ln: str, tn: str, cn: str, le: str, ne: str, ce: str):
-    
-    input_array = [
-        [lg, ng, cg],
-        [ln, tn, cn],
-        [le, ne, ce]
-    ]
+def return_image(
+    lg: str, ng: str, cg: str, ln: str, tn: str, cn: str, le: str, ne: str, ce: str
+):
+
+    input_array = [[lg, ng, cg], [ln, tn, cn], [le, ne, ce]]
 
     file_name = "car.jpg"
 
     new_img = generate(input_array)
+    if type(new_img) == str:
+        return new_img
 
     new_img.save(file_name)
     temp_file_obj = NamedTemporaryFile(mode="w+b", suffix="jpg")
@@ -90,7 +91,9 @@ def return_image(lg: str, ng: str, cg: str, ln: str, tn: str, cn: str, le: str, 
     remove(file_name)
     temp_file_obj.seek(0, 0)
 
-    return responses.StreamingResponse(BytesIO(temp_file_obj.read()), media_type="image/jpg")
+    return responses.StreamingResponse(
+        BytesIO(temp_file_obj.read()), media_type="image/jpg"
+    )
 
 
 if __name__ == "__main__":
