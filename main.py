@@ -1,5 +1,6 @@
-from typing import List
+from typing import Any, List
 from PIL import Image, ImageDraw, ImageFont
+import json
 import requests
 from io import BytesIO
 from fastapi import FastAPI, responses
@@ -113,15 +114,9 @@ def test_image(image_url: str):
         return responses.Response(content="Not Valid")
 
 
-class Item(BaseModel):
-    board: List
-
-@app.post("/con4")
-def generate_board(item: Item):
-    print()
-    print(item.board)
-    print()
-    board_image = generate_board_image(item.board)
+@app.get("/con4")
+def generate_board(board_string: str):
+    board_image = generate_board_image(json.loads(board_string))
     return return_image_file_response(board_image)
 
 
