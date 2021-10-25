@@ -1,3 +1,4 @@
+from typing import List
 from PIL import Image, ImageDraw, ImageFont
 import requests
 from io import BytesIO
@@ -5,11 +6,15 @@ from fastapi import FastAPI, responses
 from tempfile import NamedTemporaryFile
 from shutil import copyfileobj
 from os import remove
+from pydantic import BaseModel
+from Connect4BoardGen import generate_board_image
 
 SIDE_LENGTH = 600
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 THIRD = SIDE_LENGTH // 3
+
+FILE_NAME = "car.jpg"
 
 ALIGNMENTS = [
     ["Lawful Good", "Neutral Good", "Chaotic Good"],
@@ -26,6 +31,21 @@ def ImportImage(img_string: str):
 
 
 font = ImageFont.truetype("arial.ttf", 20)
+
+
+
+def return_image_file_response(img):
+    img.save(FILE_NAME)
+    temp_file_obj = NamedTemporaryFile(mode="w+b", suffix="jpg")
+    pil_image = open(FILE_NAME, "rb")
+    copyfileobj(pil_image, temp_file_obj)
+    pil_image.close()
+    remove(FILE_NAME)
+    temp_file_obj.seek(0, 0)
+    return responses.StreamingResponse(
+        BytesIO(temp_file_obj.read()), media_type="image/jpg"
+    )
+
 
 
 def generate(input_array):
@@ -77,23 +97,11 @@ def return_image(
 
     input_array = [[lg, ng, cg], [ln, tn, cn], [le, ne, ce]]
 
-    file_name = "car.jpg"
-
     new_img = generate(input_array)
     if type(new_img) == str:
         return new_img
 
-    new_img.save(file_name)
-    temp_file_obj = NamedTemporaryFile(mode="w+b", suffix="jpg")
-    pil_image = open(file_name, "rb")
-    copyfileobj(pil_image, temp_file_obj)
-    pil_image.close()
-    remove(file_name)
-    temp_file_obj.seek(0, 0)
-
-    return responses.StreamingResponse(
-        BytesIO(temp_file_obj.read()), media_type="image/jpg"
-    )
+    return return_image_file_response(new_img)
 
 
 @app.get("/test")
@@ -103,6 +111,19 @@ def test_image(image_url: str):
         return responses.Response(content="Valid")
     except:
         return responses.Response(content="Not Valid")
+
+
+class Item(BaseModel):
+    board: List
+
+@app.post("/con4")
+def generate_board(item: Item):
+    print()
+    print(item.board)
+    print()
+    board_image = generate_board_image(item.board)
+    return return_image_file_response(board_image)
+
 
 
 if __name__ == "__main__":
