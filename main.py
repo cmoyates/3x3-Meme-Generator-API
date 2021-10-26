@@ -33,7 +33,7 @@ def ImportImage(img_string: str):
 
 font = ImageFont.truetype("arial.ttf", 20)
 
-
+# "uvicorn main:app --reload" to run
 
 def return_image_file_response(img):
     img.save(FILE_NAME)
@@ -118,6 +118,14 @@ def test_image(image_url: str):
 def generate_board(board_string: str):
     board_image = generate_board_image(json.loads(board_string))
     return return_image_file_response(board_image)
+
+@app.get("/con4test")
+def generate_board_test(board_string: str):
+    chunks, chunk_size = len(board_string), 7
+    board_array_temp = [ list(map(int, list(board_string[i:i+chunk_size]))) for i in range(0, chunks, chunk_size) ]
+    board_image = generate_board_image(board_array_temp)
+    return return_image_file_response(board_image)
+
 
 
 

@@ -26,7 +26,7 @@ def generate_board_image(board):
                     (i * 2 + 2) * (CIRCLE_RADIUS) - SPACING,
                     (j * 2 + 2) * (CIRCLE_RADIUS) - SPACING,
                 ),
-                fill=COLOR_LIST[board[j][i]+1],
+                fill=COLOR_LIST[board[j][i]],
             )
         w, h = image_draw.textsize(str(i+1), font)
         image_draw.text(
